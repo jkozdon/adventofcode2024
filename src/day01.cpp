@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "fmt/core.h"
+#include <numeric>
 #include <ranges>
 #include <set>
 #include <unordered_map>
@@ -23,11 +24,9 @@ void part1(const std::string &input, const bool test)
     left.insert(a);
     right.insert(b);
   }
-  uint res = 0;
-  int i = 0;
-  for (const auto &[a, b] : std::ranges::views::zip(left, right)) {
-    res += std::abs(a - b);
-  }
+  int res = std::transform_reduce(left.begin(), left.end(), right.begin(), 0,
+                                  std::plus<>{},
+                                  [](int a, int b) { return std::abs(a - b); });
   fmt::println("  Part a: {}", res);
   if (test) {
     assert(res == 11);
@@ -50,10 +49,11 @@ void part2(const std::string &input, const bool test)
     left[a]++;
     right[b]++;
   }
-  int res = 0;
-  for (auto [a, ca] : left) {
-    res += a * ca * right[a];
-  }
+  int res = std::transform_reduce(left.begin(), left.end(), 0, std::plus<>{},
+                                  [&right](const auto &pair) {
+                                    auto &[a, ca] = pair;
+                                    return a * ca * right[a];
+                                  });
   fmt::println("  Part b: {}", res);
   if (test) {
     assert(res == 31);
