@@ -37,4 +37,5 @@ int main(int argc, char *argv[])
   }
 
   day01::run(base_path, test);
+  day02::run(base_path, test);
 }
