@@ -10,7 +10,7 @@ void part2(const std::string &input, const bool test) {}
 
 void run(const std::string &base_path, const bool test)
 {
-  auto input = read_input(base_path, 1, test);
+  auto input = read_input(base_path, 2, test);
   fmt::println("Day 02:");
   part1(input, test);
   part2(input, test);
