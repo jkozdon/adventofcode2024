@@ -14,8 +14,8 @@ void part1(const std::string &input, const bool test)
   auto match = std::sregex_iterator(input.begin(), input.end(), regex);
   int res = 0;
   for (; match != std::sregex_iterator(); ++match) {
-    res += std::atoi((*match)[1].str().c_str()) *
-           std::atoi((*match)[2].str().c_str());
+    res += std::stoi((*match)[1].str()) *
+           std::stoi((*match)[2].str());
   }
   fmt::println("  Part a: {}", res);
   if (test) {
@@ -35,8 +35,8 @@ void part2(const std::string &input, const bool test)
     } else if ((*match).str() == "don't()") {
       enable = false;
     } else if (enable) {
-      res += std::atoi((*match)[2].str().c_str()) *
-             std::atoi((*match)[3].str().c_str());
+      res += std::stoi((*match)[2].str()) *
+             std::stoi((*match)[3].str());
     }
   }
   fmt::println("  Part b: {}", res);
