@@ -23,7 +23,27 @@ void part1(const std::string &input, const bool test)
   }
 }
 
-void part2(const std::string &input, const bool test) {}
+void part2(const std::string &input, const bool test)
+{
+  std::regex regex(R"((mul\(([0-9]+),([0-9]+)\)|do\(\)|don't\(\)))");
+  auto match = std::sregex_iterator(input.begin(), input.end(), regex);
+  int res = 0;
+  bool enable = true;
+  for (; match != std::sregex_iterator(); ++match) {
+    if ((*match).str() == "do()") {
+      enable = true;
+    } else if ((*match).str() == "don't()") {
+      enable = false;
+    } else if (enable) {
+      res += std::atoi((*match)[2].str().c_str()) *
+             std::atoi((*match)[3].str().c_str());
+    }
+  }
+  fmt::println("  Part b: {}", res);
+  if (test) {
+    assert(res == 48);
+  }
+}
 
 void run(const std::string &base_path, const bool test)
 {
