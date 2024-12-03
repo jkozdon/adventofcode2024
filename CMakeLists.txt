@@ -19,6 +19,7 @@ add_executable(advent
 	src/driver.cpp
 	src/day01.cpp
 	src/day02.cpp
+	src/day03.cpp
 )
 
 target_link_libraries(advent

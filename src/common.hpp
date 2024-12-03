@@ -16,6 +16,11 @@ namespace day02
 void run(const std::string &base_path, const bool test);
 } // namespace day02
 
+namespace day03
+{
+void run(const std::string &base_path, const bool test);
+} // namespace day03
+
 inline std::string read_input(const std::string &base_path, int day, bool test)
 {
   std::string input_file = base_path + "/day" + (day < 10 ? "0" : "") +
