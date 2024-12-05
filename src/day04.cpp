@@ -2,6 +2,7 @@
 #include "fmt/core.h"
 
 #include <ranges>
+#include <utility>
 #include <vector>
 #include <cassert>
 
@@ -27,32 +28,34 @@ int check(const std::vector<std::string> &lines, int i, int j)
   }
   return 0;
 };
-void part1(const std::string &input, const bool test)
+
+template <int ix = -1, int iy = -1>
+int check_all(const std::vector<std::string> &lines, int i, int j)
 {
-  auto count_xmas = [](const std::vector<std::string> &lines, int i, int j) {
-    int res = 0;
-    res += check<1, -1, 'M'>(lines, i, j);
-    res += check<0, -1, 'M'>(lines, i, j);
-    res += check<-1, -1, 'M'>(lines, i, j);
-    res += check<1, 0, 'M'>(lines, i, j);
-    res += check<0, 0, 'M'>(lines, i, j);
-    res += check<-1, 0, 'M'>(lines, i, j);
-    res += check<1, 1, 'M'>(lines, i, j);
-    res += check<0, 1, 'M'>(lines, i, j);
-    res += check<-1, 1, 'M'>(lines, i, j);
-    return res;
-  };
+  if constexpr (ix == 2 || iy == 2) {
+    return 0;
+  } else {
+    int res = check<ix, iy, 'M'>(lines, i, j);
+    constexpr int nx = iy < 1 ? ix : ix + 1;
+    constexpr int ny = iy < 1 ? iy + 1 : -1;
+    return res + check_all<nx, ny>(lines, i, j);
+  }
+}
+
+template <int... ixs> void part1(const std::string &input, const bool test)
+{
   auto lines = input | std::views::split('\n') |
                std::views::transform([](auto line) {
                  return std::ranges::to<std::string>(line);
                }) |
                std::ranges::to<std::vector<std::string>>();
 
+  std::integer_sequence<int, -1, 0, 1> vals;
   int res = 0;
   for (int i = 0; i < lines.size(); i++) {
     for (int j = 0; j < lines[i].size(); j++) {
       if (lines[i][j] == 'X') {
-        res += count_xmas(lines, i, j);
+        res += check_all(lines, i, j);
       }
     }
   }
