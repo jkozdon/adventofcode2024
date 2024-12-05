@@ -11,9 +11,6 @@ namespace day04
 template <int ix, int iy, char next>
 int check(const std::vector<std::string> &lines, int i, int j)
 {
-  if constexpr (ix == 0 && iy == 0) {
-    return 0;
-  }
   i += ix;
   j += iy;
   if (i < 0 || i >= lines.size() || j < 0 || j >= lines[i].size()) {
