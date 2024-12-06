@@ -67,7 +67,8 @@ void part2(const std::string &input, const bool test)
         b = c;
         c = d;
       } else {
-        // Since keeping a isn't valid, drop a and let the do...while handle this case
+        // Since keeping a isn't valid, drop a and let the do...while handle
+        // this case
         a = b;
         b = c;
         c = d;
