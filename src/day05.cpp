@@ -18,7 +18,7 @@ void part1(const std::string &input, const bool test)
 void part2(const std::string &input, const bool test)
 {
   int res = 0;
-  fmt::print("  Part a: {}\n", res);
+  fmt::print("  Part b: {}\n", res);
   if (test) {
     assert(res == 0);
   }
@@ -26,7 +26,6 @@ void part2(const std::string &input, const bool test)
 
 void run(const std::string &base_path, const bool test)
 {
-  return;
   auto input = read_input(base_path, 5, test);
   fmt::println("Day 05:");
   part1(input, test);
