@@ -46,9 +46,6 @@ void part1(const std::string &input, const bool test)
                    : (int64_t)0;
       }) |
       std::ranges::to<std::vector<int64_t>>();
-  for (int n : results) {
-    fmt::println("{}", n);
-  }
   int64_t res = std::reduce(results.begin(), results.end());
   fmt::print("  Part a: {}\n", res);
   if (test) {
@@ -56,12 +53,53 @@ void part1(const std::string &input, const bool test)
   }
 }
 
+bool part2_check(int64_t target, int index, auto nums)
+{
+  auto num = nums[index];
+  ++index;
+  if (nums.size() == index) {
+    return target == num;
+  }
+  if (target % num == 0 && part2_check(target / num, index, nums)) {
+    return true;
+  }
+  auto mul = 10;
+  for (; num / mul; mul *= 10) {
+  }
+  if (target % mul == num && part2_check(target / mul, index, nums)) {
+    return true;
+  }
+  return part2_check(target - num, index, nums);
+}
+
 void part2(const std::string &input, const bool test)
 {
-  int res = 0;
+  auto results =
+      input | std::views::split('\n') | std::views::transform([](auto &&line) {
+        if (line.empty())
+          return (int64_t)0;
+        auto nums = line | std::views::split(' ') |
+                    std::views::transform([](auto &&num) { //
+                      auto st = num.begin();
+                      auto en = num.end();
+                      if (*(en - 1) == ':') {
+                        --en;
+                      }
+                      std::string str(st, en);
+                      return std::atoll(str.c_str());
+                    }) |
+                    std::ranges::to<std::vector<int64_t>>();
+        auto target = nums[0];
+        return part2_check(target, 0,
+                           nums | std::views::drop(1) | std::views::reverse)
+                   ? (int64_t)target
+                   : (int64_t)0;
+      }) |
+      std::ranges::to<std::vector<int64_t>>();
+  int64_t res = std::reduce(results.begin(), results.end());
   fmt::print("  Part b: {}\n", res);
   if (test) {
-    assert(res == 0);
+    assert(res == 11387);
   }
 }
 
