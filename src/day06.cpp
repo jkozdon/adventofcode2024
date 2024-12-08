@@ -1,4 +1,7 @@
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 #include <cassert>
 
@@ -8,7 +11,7 @@
 namespace day06
 {
 
-enum direction { up=1, down=2, right=4, left=8 };
+enum direction { up = 1, down = 2, right = 4, left = 8 };
 
 void part1(const std::string &input, const bool test)
 {
@@ -82,13 +85,178 @@ void part1(const std::string &input, const bool test)
     assert(res == 41);
   }
 }
+struct hash_pair {
+  size_t operator()(const std::pair<int, int> &p) const
+  {
+    return (size_t)(p.first + p.second * 1024);
+  }
+};
 
 void part2(const std::string &input, const bool test)
 {
+  std::unordered_map<int, std::unordered_set<int>> rows;
+  std::unordered_map<int, std::unordered_set<int>> cols;
+  auto contains_loop =
+      [](std::unordered_map<int, std::unordered_set<int>> &rows,
+         std::unordered_map<int, std::unordered_set<int>> &cols, int gx, int gy,
+         int dir) {
+        std::unordered_map<std::pair<int, int>, int, hash_pair> seen;
+        while (true) {
+          if (dir == up) {
+            const auto &col = cols[gx];
+            auto m = -1;
+            for (auto n : col) {
+              if (gy > n) {
+                m = std::max(m, n);
+              }
+            }
+            if (m == -1) {
+              return false;
+            }
+            gy = m + 1;
+            dir = right;
+          } else if (dir == right) {
+            const auto &row = rows[gy];
+            auto m = INT_MAX;
+            for (auto n : row) {
+              if (gx < n) {
+                m = std::min(m, n);
+              }
+            }
+            if (m == INT_MAX) {
+              return false;
+            }
+            gx = m - 1;
+            dir = down;
+          } else if (dir == down) {
+            const auto &col = cols[gx];
+            auto m = INT_MAX;
+            for (auto n : col) {
+              if (gy < n) {
+                m = std::min(m, n);
+              }
+            }
+            if (m == INT_MAX) {
+              return false;
+            }
+            gy = m - 1;
+            dir = left;
+          } else {
+            const auto &row = rows[gy];
+            auto m = -1;
+            for (auto n : row) {
+              if (gx > n) {
+                m = std::max(m, n);
+              }
+            }
+            if (m == -1) {
+              return false;
+            }
+            gx = m + 1;
+            dir = up;
+          }
+          const std::pair pnt{gx, gy};
+          if (seen[pnt] & dir) {
+            return true;
+          }
+          seen[pnt] |= dir;
+        }
+      };
+
+  auto lines = input | std::views::split('\n') |
+               std::ranges::to<std::vector<std::string>>();
+  int gx = 0;
+  int gy = 0;
+  for (int j = 0; j < lines.size(); ++j) {
+    auto &line = lines[j];
+    for (int i = 0; i < line.size(); ++i) {
+      auto c = line[i];
+      if (c == '^') {
+        gx = i;
+        gy = j;
+      }
+      if (c == '#') {
+        rows[j].insert(i);
+        cols[i].insert(j);
+      }
+    }
+  }
+
+  int Nx = lines[0].size();
+  int Ny = lines.size();
+
+  direction dir = up;
+
   int res = 0;
+  std::unordered_set<std::pair<int, int>, hash_pair> found;
+  while (true) {
+    if (dir == up) {
+      if (gy == 0)
+        break;
+      if (lines[gy - 1][gx] != '#') {
+        gy -= 1;
+        rows[gy].insert(gx);
+        cols[gx].insert(gy);
+        if (contains_loop(rows, cols, gx, gy + 1, dir)) {
+          found.insert(std::pair{gx, gy});
+        }
+        rows[gy].erase(gx);
+        cols[gx].erase(gy);
+      } else {
+        dir = right;
+      }
+    } else if (dir == right) {
+      if (gx == Nx - 1)
+        break;
+      if (lines[gy][gx + 1] != '#') {
+        gx += 1;
+        rows[gy].insert(gx);
+        cols[gx].insert(gy);
+        if (contains_loop(rows, cols, gx - 1, gy, dir)) {
+          found.insert(std::pair{gx, gy});
+        }
+        rows[gy].erase(gx);
+        cols[gx].erase(gy);
+      } else {
+        dir = down;
+      }
+    } else if (dir == down) {
+      if (gy == Ny - 1)
+        break;
+      if (lines[gy + 1][gx] != '#') {
+        gy += 1;
+        rows[gy].insert(gx);
+        cols[gx].insert(gy);
+        if (contains_loop(rows, cols, gx, gy - 1, dir)) {
+          found.insert(std::pair{gx, gy});
+        }
+        rows[gy].erase(gx);
+        cols[gx].erase(gy);
+      } else {
+        dir = left;
+      }
+    } else {
+      if (gx == 0)
+        break;
+      if (lines[gy][gx - 1] != '#') {
+        gx -= 1;
+        rows[gy].insert(gx);
+        cols[gx].insert(gy);
+        if (contains_loop(rows, cols, gx + 1, gy, dir)) {
+          found.insert(std::pair{gx, gy});
+        }
+        rows[gy].erase(gx);
+        cols[gx].erase(gy);
+      } else {
+        dir = up;
+      }
+    }
+  }
+
+  res = found.size();
   fmt::print("  Part b: {}\n", res);
   if (test) {
-    assert(res == 0);
+    assert(res == 6);
   }
 }
 
