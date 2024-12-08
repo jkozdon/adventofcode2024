@@ -187,73 +187,92 @@ void part2(const std::string &input, const bool test)
 
   direction dir = up;
 
-  int res = 0;
   std::unordered_set<std::pair<int, int>, hash_pair> found;
   while (true) {
     if (dir == up) {
-      if (gy == 0)
+      int ny = gy - 1;
+      int nx = gx;
+      if (ny < 0)
         break;
-      if (lines[gy - 1][gx] != '#') {
-        gy -= 1;
-        rows[gy].insert(gx);
-        cols[gx].insert(gy);
-        if (contains_loop(rows, cols, gx, gy + 1, dir)) {
-          found.insert(std::pair{gx, gy});
+      if (lines[ny][nx] != '#') {
+        if (lines[ny][nx] == '.') {
+          rows[ny].insert(nx);
+          cols[nx].insert(ny);
+          if (contains_loop(rows, cols, gx, gy, dir)) {
+            found.insert(std::pair{nx, ny});
+          }
+          rows[ny].erase(nx);
+          cols[nx].erase(ny);
         }
-        rows[gy].erase(gx);
-        cols[gx].erase(gy);
+        lines[gy][gx] = 'X';
+        --gy;
       } else {
         dir = right;
       }
     } else if (dir == right) {
-      if (gx == Nx - 1)
+      int ny = gy;
+      int nx = gx + 1;
+      if (nx == 1)
         break;
-      if (lines[gy][gx + 1] != '#') {
-        gx += 1;
-        rows[gy].insert(gx);
-        cols[gx].insert(gy);
-        if (contains_loop(rows, cols, gx - 1, gy, dir)) {
-          found.insert(std::pair{gx, gy});
+      if (lines[gy][nx] != '#') {
+        if (lines[ny][nx] == '.') {
+          rows[ny].insert(nx);
+          cols[nx].insert(ny);
+          if (contains_loop(rows, cols, gx, gy, dir)) {
+            found.insert(std::pair{nx, ny});
+          }
+          rows[ny].erase(nx);
+          cols[nx].erase(ny);
         }
-        rows[gy].erase(gx);
-        cols[gx].erase(gy);
+        lines[gy][gx] = 'X';
+        ++gx;
       } else {
         dir = down;
       }
     } else if (dir == down) {
-      if (gy == Ny - 1)
+      int ny = gy + 1;
+      int nx = gx;
+      if (ny == Ny)
         break;
-      if (lines[gy + 1][gx] != '#') {
-        gy += 1;
-        rows[gy].insert(gx);
-        cols[gx].insert(gy);
-        if (contains_loop(rows, cols, gx, gy - 1, dir)) {
-          found.insert(std::pair{gx, gy});
+      if (lines[ny][gx] != '#') {
+        if (lines[ny][nx] == '.') {
+          rows[ny].insert(nx);
+          cols[nx].insert(ny);
+          if (contains_loop(rows, cols, gx, gy, dir)) {
+            found.insert(std::pair{nx, ny});
+          }
+          rows[ny].erase(nx);
+          cols[nx].erase(ny);
         }
-        rows[gy].erase(gx);
-        cols[gx].erase(gy);
+        lines[gy][gx] = 'X';
+        ++gy;
       } else {
         dir = left;
       }
     } else {
-      if (gx == 0)
+      int ny = gy;
+      int nx = gx - 1;
+      if (nx < 0)
         break;
       if (lines[gy][gx - 1] != '#') {
-        gx -= 1;
-        rows[gy].insert(gx);
-        cols[gx].insert(gy);
-        if (contains_loop(rows, cols, gx + 1, gy, dir)) {
-          found.insert(std::pair{gx, gy});
+        if (lines[ny][nx] == '.') {
+          rows[ny].insert(nx);
+          cols[nx].insert(ny);
+          if (contains_loop(rows, cols, gx, gy, dir)) {
+            found.insert(std::pair{nx, ny});
+          }
+          rows[ny].erase(nx);
+          cols[nx].erase(ny);
         }
-        rows[gy].erase(gx);
-        cols[gx].erase(gy);
+        lines[gy][gx] = 'X';
+        --gx;
       } else {
         dir = up;
       }
     }
   }
 
-  res = found.size();
+  int res = found.size();
   fmt::print("  Part b: {}\n", res);
   if (test) {
     assert(res == 6);
