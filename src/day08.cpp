@@ -77,10 +77,58 @@ void part1(const std::string &input, const bool test)
 
 void part2(const std::string &input, const bool test)
 {
-  int res = 0;
+  int num_cols = 0;
+  for (auto c : input) {
+    if (c == '\n')
+      break;
+    ++num_cols;
+  }
+  int num_rows = input.size() / (num_cols + 1);
+
+  auto lines = input | std::views::split('\n');
+
+  int c_row = 0;
+  std::unordered_map<int, std::unordered_set<std::pair<int, int>, hash_pair>>
+      recvs;
+  std::unordered_set<std::tuple<char, int, int>, hash_tuple> nodes;
+  for (auto line = lines.begin(); line != lines.end(); ++line, ++c_row) {
+    int c_col = 0;
+    for (auto r : *line) {
+      if (r != '.') {
+        nodes.insert(std::tuple{'.', c_row, c_col});
+        for (auto [n_row, n_col] : recvs[r]) {
+          auto d_row = n_row - c_row;
+          auto d_col = n_col - c_col;
+
+          auto t_row = n_row + d_row;
+          auto t_col = n_col + d_col;
+
+          auto s_row = c_row - d_row;
+          auto s_col = c_col - d_col;
+
+          while (0 <= t_row && t_row < num_rows && //
+                 0 <= t_col && t_col < num_cols) {
+            nodes.insert(std::tuple{'.', t_row, t_col});
+            t_row += d_row;
+            t_col += d_col;
+          }
+
+          while (0 <= s_row && s_row < num_rows && //
+                 0 <= s_col && s_col < num_cols) {
+            nodes.insert(std::tuple{'.', s_row, s_col});
+            s_row -= d_row;
+            s_col -= d_col;
+          }
+        }
+        recvs[r].insert(std::pair{c_row, c_col});
+      }
+      ++c_col;
+    }
+  }
+  int res = nodes.size();
   fmt::print("  Part b: {}\n", res);
   if (test) {
-    assert(res == 0);
+    assert(res == 34);
   }
 }
 
