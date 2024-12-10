@@ -1,4 +1,6 @@
 #include <deque>
+#include <list>
+#include <vector>
 #include <cassert>
 #include <cstdint>
 
@@ -58,12 +60,76 @@ void part1(const std::string &input, const bool test)
   }
 }
 
+struct space_part {
+  int fid;
+  uint64_t size;
+};
+
 void part2(const std::string &input, const bool test)
 {
+  std::list<space_part> parts;
+  std::vector<space_part> files;
+  int fid = 0;
+  for (auto c = input.begin(); c != input.end() && *c != '\n'; ++c) {
+    parts.push_back({fid, (uint64_t)(*c - '0')});
+    files.push_back({fid, (uint64_t)(*c - '0')});
+    ++fid;
+    ++c;
+    if (c == input.end() || *c == '\n') {
+      break;
+    }
+    parts.push_back({-1, (uint64_t)(*c - '0')});
+  }
+
+  for (auto rit = files.rbegin(); rit != files.rend(); ++rit) {
+    auto n = (*rit);
+    for (auto pit = parts.begin(); pit != parts.end(); ++pit) {
+      auto &p = *pit;
+      if (p.fid == n.fid) {
+        break;
+      }
+      if (p.fid == -1 && p.size >= n.size) {
+        auto size = p.size - n.size;
+        if (p.size == n.size) {
+          (*pit).fid = n.fid;
+        } else {
+          (*pit).size -= n.size;
+          parts.insert(pit, n);
+        }
+        auto prev = pit++;
+        for (; (*pit).fid != n.fid; prev = pit++)
+          ;
+        (*pit).fid = -1;
+        if ((*prev).fid == -1) {
+          (*pit).size += (*prev).size;
+          parts.erase(prev);
+        }
+        auto next = pit;
+        next++;
+        if (next != parts.end() && (*next).fid == -1) {
+          (*pit).size += (*next).size;
+          parts.erase(next);
+        }
+        break;
+      }
+    }
+  }
+
+  int c = 0;
   uint64_t res = 0;
-  fmt::print("  Part a: {}\n", res);
+  for (auto n : parts) {
+    if (n.fid == -1) {
+      c += n.size;
+      continue;
+    }
+    for (int i = 0; i < n.size; ++i, ++c) {
+      res += n.fid * c;
+    }
+  }
+
+  fmt::print("  Part b: {}\n", res);
   if (test) {
-    assert(res == 0);
+    assert(res == 2858L);
   }
 }
 
