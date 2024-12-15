@@ -26,7 +26,6 @@ void part2(const std::string &input, const bool test)
 
 void run(const std::string &base_path, const bool test)
 {
-  return;
   auto input = read_input(base_path, 15, test);
   fmt::println("Day 15:");
   part1(input, test);
