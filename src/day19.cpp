@@ -1,4 +1,4 @@
-#include <queue>
+#include <stack>
 #include <ranges>
 #include <regex>
 #include <string>
@@ -30,7 +30,7 @@ void part1(const std::string &input, const bool test)
   for (auto vline : lines) {
     if (vline.empty())
       continue;
-    std::queue<std::string> order;
+    std::stack<std::string> order;
     auto line = std::ranges::to<std::string>(vline);
     int c = 0;
     int l = 1;
@@ -39,8 +39,8 @@ void part1(const std::string &input, const bool test)
         if (order.empty()) {
           break;
         }
-        l = order.front().size() + 1;
-        c -= order.front().size();
+        l = order.top().size() + 1;
+        c -= order.top().size();
         order.pop();
       }
       if (towels.contains(line.substr(c, l))) {
