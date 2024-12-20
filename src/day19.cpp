@@ -1,6 +1,6 @@
-#include <stack>
 #include <ranges>
 #include <regex>
+#include <stack>
 #include <string>
 #include <unordered_set>
 #include <cassert>
@@ -30,7 +30,7 @@ void part1(const std::string &input, const bool test)
   for (auto vline : lines) {
     if (vline.empty())
       continue;
-    std::stack<std::string> order;
+    std::stack<std::pair<int, int>> order;
     auto line = std::ranges::to<std::string>(vline);
     int c = 0;
     int l = 1;
@@ -39,12 +39,12 @@ void part1(const std::string &input, const bool test)
         if (order.empty()) {
           break;
         }
-        l = order.top().size() + 1;
-        c -= order.top().size();
+        c = order.top().first;
+        l = order.top().second;
         order.pop();
       }
       if (towels.contains(line.substr(c, l))) {
-        order.push(line.substr(c, l));
+        order.push({c, l + 1});
         c += l;
         l = 1;
       } else {
