@@ -7,15 +7,14 @@
 #include "common.hpp"
 #include "fmt/core.h"
 
+namespace day11
+{
 struct hash_pair {
   size_t operator()(const std::pair<uint64_t, int> &p) const
   {
     return (size_t)(p.first + p.second * 1024);
   }
 };
-
-namespace day11
-{
 
 uint64_t count_nums(
     const int blinks, const uint64_t num,
