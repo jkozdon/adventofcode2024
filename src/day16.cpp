@@ -68,9 +68,9 @@ void part1(const std::string &input, const bool test)
     auto helper = [&](int x, int y, char dir, uint64_t delta) {
       auto nx = dir == 'E' ? x + 1 : dir == 'W' ? x - 1 : x;
       auto ny = dir == 'N' ? y - 1 : dir == 'S' ? y + 1 : y;
-      if (map(nx, ny) != '#' && !seen.contains({nx, ny, dir})) {
-        moves.insert({cost + delta + 1, {nx, ny, dir}});
-        seen.insert({nx, ny, dir});
+      if (map(nx, ny) != '#' && !seen.contains({x, y, dir})) {
+        moves.insert({cost + delta, {x, y, dir}});
+        seen.insert({x, y, dir});
       }
     };
     auto nx = dir == 'E' ? x + 1 : dir == 'W' ? x - 1 : x;
@@ -89,9 +89,12 @@ void part1(const std::string &input, const bool test)
     auto keyval = *moves.begin();
     moves.erase(moves.begin());
     auto cur = keyval.first;
+    auto dir = std::get<2>(keyval.second);
     auto x = std::get<0>(keyval.second);
     auto y = std::get<1>(keyval.second);
-    auto dir = std::get<2>(keyval.second);
+    x = dir == 'E' ? x + 1 : dir == 'W' ? x - 1 : x;
+    y = dir == 'N' ? y - 1 : dir == 'S' ? y + 1 : y;
+    ++cur;
     if (map(x, y) == 'E') {
       score = cur;
       break;
