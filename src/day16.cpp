@@ -1,8 +1,7 @@
-#include <cassert>
-#include <cstdint>
 #include <map>
 #include <unordered_set>
-#include <vector>
+#include <cassert>
+#include <cstdint>
 
 #include "common.hpp"
 #include "fmt/core.h"
@@ -24,10 +23,7 @@ struct Maze {
   std::pair<int, int> start() { return {1, Ny - 2}; }
   std::pair<int, int> end() { return {Nx - 3, 1}; }
 
-  char index(int x, int y)
-  {
-    return x + y * Nx;
-  }
+  char index(int x, int y) { return x + y * Nx; }
   char operator()(int x, int y) const
   {
     if (x >= 0 && x < Nx - 1 && y >= 0 && y < Ny) {
@@ -68,12 +64,24 @@ void part1(const std::string &input, const bool test)
 
   std::unordered_set<std::tuple<int, int, char>, TupleHash> seen;
   uint64_t score = UINT64_MAX;
-  auto check_insert = [&](int x, int y, char dir, uint64_t cost) {
+  auto check_insert = [&](int x, int y, char dir, uint64_t cost = 0) {
+    auto helper = [&](int x, int y, char dir, uint64_t delta) {
+      auto nx = dir == 'E' ? x + 1 : dir == 'W' ? x - 1 : x;
+      auto ny = dir == 'N' ? y - 1 : dir == 'S' ? y + 1 : y;
+      if (map(nx, ny) != '#' && !seen.contains({nx, ny, dir})) {
+        moves.insert({cost + delta + 1, {nx, ny, dir}});
+        seen.insert({nx, ny, dir});
+      }
+    };
     auto nx = dir == 'E' ? x + 1 : dir == 'W' ? x - 1 : x;
-    auto ny = dir == 'N' ? y - 1 : dir == 'S' ? y + 1 : y;
-    if (map(nx, ny) != '#' && !seen.contains({nx, ny, dir})) {
-      moves.insert({cost, {nx, ny, dir}});
-      seen.insert({nx, ny, dir});
+    if (dir == 'N' || dir == 'S') {
+      helper(x, y, dir, 0);
+      helper(x, y, 'E', turncost);
+      helper(x, y, 'W', turncost);
+    } else {
+      helper(x, y, dir, 0);
+      helper(x, y, 'N', turncost);
+      helper(x, y, 'S', turncost);
     }
   };
 
@@ -88,26 +96,7 @@ void part1(const std::string &input, const bool test)
       score = cur;
       break;
     }
-    if (dir == 'N') {
-      check_insert(x, y, 'N', cur + 1);
-      check_insert(x, y, 'E', cur + turncost + 1);
-      check_insert(x, y, 'W', cur + turncost + 1);
-    }
-    if (dir == 'S') {
-      check_insert(x, y, 'S', cur + 1);
-      check_insert(x, y, 'E', cur + turncost + 1);
-      check_insert(x, y, 'W', cur + turncost + 1);
-    }
-    if (dir == 'E') {
-      check_insert(x, y, 'E', cur + 1);
-      check_insert(x, y, 'N', cur + turncost + 1);
-      check_insert(x, y, 'S', cur + turncost + 1);
-    }
-    if (dir == 'W') {
-      check_insert(x, y, 'W', cur + 1);
-      check_insert(x, y, 'N', cur + turncost + 1);
-      check_insert(x, y, 'S', cur + turncost + 1);
-    }
+    check_insert(x, y, dir, cur);
   }
 
   fmt::print("  Part a: {}\n", score);
