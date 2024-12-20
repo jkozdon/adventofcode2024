@@ -1,10 +1,11 @@
 #include <cassert>
 #include <cstdint>
+#include <map>
+#include <unordered_set>
+#include <vector>
 
 #include "common.hpp"
 #include "fmt/core.h"
-#include <map>
-#include <unordered_set>
 
 namespace day16
 {
@@ -23,6 +24,10 @@ struct Maze {
   std::pair<int, int> start() { return {1, Ny - 2}; }
   std::pair<int, int> end() { return {Nx - 3, 1}; }
 
+  char index(int x, int y)
+  {
+    return x + y * Nx;
+  }
   char operator()(int x, int y) const
   {
     if (x >= 0 && x < Nx - 1 && y >= 0 && y < Ny) {
@@ -52,13 +57,13 @@ void part1(const std::string &input, const bool test)
 
   constexpr uint64_t turncost = 1000;
 
-  std::multimap<uint64_t, std::pair<std::pair<int, int>, char>> moves;
+  std::multimap<uint64_t, std::tuple<int, int, char>> moves;
   auto [sx, sy] = map.start();
   if (map(sx, sy - 1) == '.') {
-    moves.insert({turncost, {{sx, sy}, 'N'}});
+    moves.insert({turncost, {sx, sy, 'N'}});
   }
   if (map(sx + 1, sy) == '.') {
-    moves.insert({0, {{sx, sy}, 'E'}});
+    moves.insert({0, {sx, sy, 'E'}});
   }
 
   std::unordered_set<std::tuple<int, int, char>, TupleHash> seen;
@@ -67,7 +72,7 @@ void part1(const std::string &input, const bool test)
     auto nx = dir == 'E' ? x + 1 : dir == 'W' ? x - 1 : x;
     auto ny = dir == 'N' ? y - 1 : dir == 'S' ? y + 1 : y;
     if (map(nx, ny) != '#' && !seen.contains({nx, ny, dir})) {
-      moves.insert({cost, {{nx, ny}, dir}});
+      moves.insert({cost, {nx, ny, dir}});
       seen.insert({nx, ny, dir});
     }
   };
@@ -76,9 +81,9 @@ void part1(const std::string &input, const bool test)
     auto keyval = *moves.begin();
     moves.erase(moves.begin());
     auto cur = keyval.first;
-    auto x = keyval.second.first.first;
-    auto y = keyval.second.first.second;
-    auto dir = keyval.second.second;
+    auto x = std::get<0>(keyval.second);
+    auto y = std::get<1>(keyval.second);
+    auto dir = std::get<2>(keyval.second);
     if (map(x, y) == 'E') {
       score = cur;
       break;
