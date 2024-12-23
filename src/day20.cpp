@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "fmt/core.h"
 #include <array>
+#include <cstdlib>
 #include <vector>
 
 namespace day20
@@ -69,10 +70,62 @@ void part1(const std::string &input, const bool test)
 
 void part2(const std::string &input, const bool test)
 {
+  auto Nx = input.find('\n') + 1;
+  auto Ny = input.size() / Nx;
+  std::vector<uint64_t> path;
+  path.resize(Nx * Ny, UINT64_MAX);
+  auto start = input.find('S');
+  auto end = input.find('E');
+
+  auto coord2index = [=](int x, int y) { return x + y * Nx; };
+  auto index2coord = [=](int ind) { return std::pair(ind % Nx, ind / Nx); };
+  auto open = [&](int x, int y) {
+    auto index = coord2index(x, y);
+    return path[index] == UINT64_MAX && input[index] != '#';
+  };
+  auto get_lvl = [&](int x, int y) {
+    if (x >= 0 && x < Nx && y >= 0 && y < Ny) {
+      auto index = coord2index(x, y);
+      return path[index];
+    } else {
+      return UINT64_MAX;
+    }
+  };
+
+  auto jump_threshold = test ? 70 : 100;
+
+  auto [x, y] = index2coord(start);
+  uint64_t lvl = path[start] = 0;
   int res = 0;
+  while (coord2index(x, y) != end) {
+    if (open(x + 1, y)) {
+      x = x + 1;
+    } else if (open(x - 1, y)) {
+      x = x - 1;
+    } else if (open(x, y + 1)) {
+      y = y + 1;
+    } else if (open(x, y - 1)) {
+      y = y - 1;
+    } else {
+      fmt::println("No open paths! ({}, {}) lvl: {}", x, y, lvl);
+      break;
+    }
+    for (int dy = -20; dy <= 20; ++dy) {
+      int dx_max = 20 - std::abs(dy);
+      for (int dx = -dx_max; dx <= dx_max; ++dx) {
+        auto jump = get_lvl(x + dx, y + dy);
+        if (jump != UINT64_MAX &&
+            lvl - jump >= jump_threshold + std::abs(dx) + std::abs(dy) - 1) {
+          ++res;
+        }
+      }
+    }
+    path[coord2index(x, y)] = ++lvl;
+  }
+
   fmt::print("  Part b: {}\n", res);
   if (test) {
-    assert(res == 0);
+    assert(res == 41);
   }
 }
 
