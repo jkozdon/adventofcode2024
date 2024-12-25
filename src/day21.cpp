@@ -1,10 +1,13 @@
+#include <algorithm>
+#include <cstdlib>
+#include <numeric>
+#include <ranges>
+#include <vector>
 #include <cassert>
 #include <cstdint>
 
 #include "common.hpp"
 #include "fmt/core.h"
-#include <cstdlib>
-#include <ranges>
 #include <string>
 #include <unordered_map>
 
@@ -25,39 +28,57 @@ void part1(const std::string &input, const bool test)
   num_map['3'] = {2, 1};
   num_map['0'] = {1, 0};
   num_map['A'] = {2, 0};
-  auto num_button_path = [&](char start, char end, char last) {
+  auto num_button_path = [&](char start, char end) {
     auto c = num_map[start];
     auto t = num_map[end];
-    std::string moves;
-    while (c.first < t.first) {
-      ++c.first;
-      moves.push_back('>');
+    std::vector<std::string> moves;
+    {
+      std::string move;
+      while (c.first < t.first) {
+        ++c.first;
+        move.push_back('>');
+      }
+      while (c.second < t.second) {
+        ++c.second;
+        move.push_back('^');
+      }
+      while (t.first < c.first) {
+        --c.first;
+        move.push_back('<');
+      }
+      while (t.second < c.second) {
+        --c.second;
+        move.push_back('v');
+      }
+      move.push_back('A');
+      moves.push_back(move);
     }
-    while (c.second < t.second) {
-      ++c.second;
-      moves.push_back('^');
+    c = num_map[start];
+    t = num_map[end];
+    if (c.first != t.first && c.second != t.second) {
+      if (std::pair(c.first, t.second) != std::pair(0, 0) &&
+          std::pair(t.first, c.second) != std::pair(0, 0)) {
+        std::string move;
+        while (t.first < c.first) {
+          --c.first;
+          move.push_back('<');
+        }
+        while (t.second < c.second) {
+          --c.second;
+          move.push_back('v');
+        }
+        while (c.first < t.first) {
+          ++c.first;
+          move.push_back('>');
+        }
+        while (c.second < t.second) {
+          ++c.second;
+          move.push_back('^');
+        }
+        move.push_back('A');
+        moves.push_back(move);
+      }
     }
-    while (t.first < c.first) {
-      --c.first;
-      moves.push_back('<');
-    }
-    while (t.second < c.second) {
-      --c.second;
-      moves.push_back('v');
-    }
-    moves.push_back('A');
-    return moves;
-  };
-  auto num_path = [&](std::string code) {
-    std::string moves;
-    char start = 'A';
-    char last = 'A';
-    for (int i = 0; i < code.size(); ++i) {
-      moves.append(num_button_path(start, code[i], last));
-      start = code[i];
-      last = moves[moves.size() - 1];
-    }
-    fmt::println("{}", moves);
     return moves;
   };
 
@@ -70,35 +91,104 @@ void part1(const std::string &input, const bool test)
   auto move_button_path = [&](char start, char end) {
     auto c = move_map[start];
     auto t = move_map[end];
-    std::string moves;
-    while (t.second < c.second) {
-      --c.second;
-      moves.push_back('v');
+    std::vector<std::string> moves;
+    {
+      std::string move;
+      while (t.second < c.second) {
+        --c.second;
+        move.push_back('v');
+      }
+      while (c.first < t.first) {
+        ++c.first;
+        move.push_back('>');
+      }
+      while (c.second < t.second) {
+        ++c.second;
+        move.push_back('^');
+      }
+      while (t.first < c.first) {
+        --c.first;
+        move.push_back('<');
+      }
+      move.push_back('A');
+      moves.push_back(move);
     }
-    while (c.first < t.first) {
-      ++c.first;
-      moves.push_back('>');
+    c = move_map[start];
+    t = move_map[end];
+    if (c.first != t.first && c.second != t.second) {
+      if (std::pair(c.first, t.second) != std::pair(0, 1) &&
+          std::pair(t.first, c.second) != std::pair(0, 1)) {
+        std::string move;
+        while (t.first < c.first) {
+          --c.first;
+          move.push_back('<');
+        }
+        while (c.second < t.second) {
+          ++c.second;
+          move.push_back('^');
+        }
+        while (c.first < t.first) {
+          ++c.first;
+          move.push_back('>');
+        }
+        while (t.second < c.second) {
+          --c.second;
+          move.push_back('v');
+        }
+        move.push_back('A');
+        moves.push_back(move);
+      }
     }
-    while (c.second < t.second) {
-      ++c.second;
-      moves.push_back('^');
-    }
-    while (t.first < c.first) {
-      --c.first;
-      moves.push_back('<');
-    }
-    moves.push_back('A');
     return moves;
   };
   auto move_path = [&](std::string code) {
     std::string moves;
     char start = 'A';
     for (int i = 0; i < code.size(); ++i) {
-      moves.append(move_button_path(start, code[i]));
+      auto moves = move_button_path(start, code[i]);
       start = code[i];
     }
-    fmt::println("{}", moves);
     return moves;
+  };
+  auto num_path = [&](std::string l1_code) {
+    char l1_start = 'A';
+    char last = 'A';
+    uint64_t res{0};
+    for (int l1_i = 0; l1_i < l1_code.size(); ++l1_i) {
+      auto l1_moves = num_button_path(l1_start, l1_code[l1_i]);
+      l1_start = l1_code[l1_i];
+
+      char l2_start = 'A';
+      std::vector<uint64_t> l2_res;
+      for (auto l2_code : l1_moves) {
+        uint64_t res{0};
+        for (int l2_i = 0; l2_i < l2_code.size(); ++l2_i) {
+          auto l2_moves = move_button_path(l2_start, l2_code[l2_i]);
+          l2_start = l2_code[l2_i];
+
+          char l3_start = 'A';
+          std::vector<uint64_t> l3_res;
+          for (auto l3_code : l2_moves) {
+            uint64_t res{0};
+            for (int l3_i = 0; l3_i < l3_code.size(); ++l3_i) {
+              auto l3_moves = move_button_path(l3_start, l3_code[l3_i]);
+              l3_start = l3_code[l3_i];
+              res += std::transform_reduce(
+                  l3_moves.begin(), l3_moves.end(), UINT64_MAX,
+                  [](auto a, auto b) { return a < b ? a : b; },
+                  [](auto x) { return x.size(); });
+            }
+            l3_res.push_back(res);
+          }
+          res += std::reduce(l3_res.begin(), l3_res.end(), UINT64_MAX,
+                             [](auto a, auto b) { return a < b ? a : b; });
+        }
+        l2_res.push_back(res);
+      }
+      res += std::reduce(l2_res.begin(), l2_res.end(), UINT64_MAX,
+                         [](auto a, auto b) { return a < b ? a : b; });
+    }
+    return res;
   };
 
   uint64_t res = 0;
@@ -107,10 +197,7 @@ void part1(const std::string &input, const bool test)
     if (view_line.empty())
       continue;
     std::string line = std::ranges::to<std::string>(view_line);
-    auto moves = move_path(move_path(num_path(line)));
-    auto num = std::atoi(line.substr(0, 3).c_str());
-    fmt::println("{} * {}", moves.size(), num);
-    res += num * moves.size();
+    res += std::atoi(line.c_str()) * num_path(line);
   }
 
   fmt::print("  Part a: {}\n", res);
