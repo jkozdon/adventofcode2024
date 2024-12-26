@@ -72,17 +72,25 @@ std::vector<std::string> num_button_path(char start, char end)
   return moves;
 };
 
-std::vector<std::string> move_button_path(char start, char end)
+std::string move_button_path(char start, char end)
 {
   std::unordered_map<char, std::pair<int, int>> move_map = {
       {'^', {1, 1}}, {'A', {2, 1}},                //
       {'<', {0, 0}}, {'v', {1, 0}}, {'>', {2, 0}}, //
   };
 
-  auto c = move_map[start];
-  auto t = move_map[end];
-  std::vector<std::string> moves;
-  {
+  if (start == 'A' && end == 'v') {
+    return ("<vA");
+  } else if (start == '^' && end == '>') {
+    return ("v>A");
+  } else if (start == 'v' && end == 'A') {
+    return (">^A");
+  } else if (start == '>' && end == '^') {
+    return ("<^A");
+  } else {
+
+    auto c = move_map[start];
+    auto t = move_map[end];
     std::string move;
     while (t.second < c.second) {
       --c.second;
@@ -101,61 +109,26 @@ std::vector<std::string> move_button_path(char start, char end)
       move.push_back('<');
     }
     move.push_back('A');
-    moves.push_back(move);
+    return (move);
   }
-  c = move_map[start];
-  t = move_map[end];
-  if (c.first != t.first && c.second != t.second) {
-    if (std::pair(c.first, t.second) != std::pair(0, 1) &&
-        std::pair(t.first, c.second) != std::pair(0, 1)) {
-      std::string move;
-      while (t.first < c.first) {
-        --c.first;
-        move.push_back('<');
-      }
-      while (c.second < t.second) {
-        ++c.second;
-        move.push_back('^');
-      }
-      while (c.first < t.first) {
-        ++c.first;
-        move.push_back('>');
-      }
-      while (t.second < c.second) {
-        --c.second;
-        move.push_back('v');
-      }
-      move.push_back('A');
-      moves.push_back(move);
-    }
-  }
-  return moves;
 };
 
-template <unsigned level> uint64_t move_path(std::vector<std::string> moves)
+uint64_t move_path(int level, std::string code)
 {
   char start = 'A';
-  std::vector<uint64_t> vec_res;
-  for (auto code : moves) {
-    uint64_t res{0};
-    for (int i = 0; i < code.size(); ++i) {
-      uint64_t new_res{0};
-      auto moves = move_button_path(start, code[i]);
-      if constexpr (level > 1) {
-        new_res = move_path<level - 1>(moves);
-      } else {
-        new_res = std::transform_reduce(
-            moves.begin(), moves.end(), UINT64_MAX,
-            [](auto a, auto b) { return a < b ? a : b; },
-            [](auto x) { return x.size(); });
-      }
-      res += new_res;
-      start = code[i];
+  uint64_t res{0};
+  for (int i = 0; i < code.size(); ++i) {
+    uint64_t new_res{0};
+    auto move = move_button_path(start, code[i]);
+    if (level > 1) {
+      new_res = move_path(level - 1, move);
+    } else {
+      new_res = move.size();
     }
-    vec_res.push_back(res);
+    res += new_res;
+    start = code[i];
   }
-  return std::reduce(vec_res.begin(), vec_res.end(), UINT64_MAX,
-                     [](auto a, auto b) { return a < b ? a : b; });
+  return res;
 }
 
 template <unsigned levels> uint64_t num_path(std::string code)
@@ -166,7 +139,11 @@ template <unsigned levels> uint64_t num_path(std::string code)
   for (int i = 0; i < code.size(); ++i) {
     auto moves = num_button_path(start, code[i]);
     start = code[i];
-    res += move_path<levels>(moves);
+    auto new_res = std::transform_reduce(
+        moves.begin(), moves.end(), UINT64_MAX,
+        [](auto a, auto b) { return a < b ? a : b; },
+        [](auto x) { return move_path(levels, {x}); });
+    res += new_res;
   }
   return res;
 };
@@ -190,8 +167,29 @@ void part1(const std::string &input, const bool test)
 
 void part2(const std::string &input, const bool test)
 {
-  uint64_t res = 0;
-  fmt::print("  Part b: {}\n", res);
+  std::unordered_map<int, std::unordered_map<std::string, uint64_t>> move_cache;
+  std::array<std::string, 16> base_moves = {"^A",   "vA",  "<A",
+                                            ">A", //
+                                            "<<A",
+                                            ">>A", //
+                                            "^>A",  "^<A", ">^A",
+                                            "<^A", //
+                                            "v>A",  "v<A", ">vA",
+                                            "<vA", //
+                                            "v<<A", ">>^A"};
+  for (int lvl = 1; lvl < 4; ++lvl) {
+    for (auto m : base_moves) {
+      move_cache[lvl][m] = move_path(lvl, {m});
+      // fmt::println("{}: {} -> {}", lvl, m, move_cache[lvl][m]);
+    }
+  }
+  std::unordered_map<std::string, std::vector<std::string>> complex_moves;
+  complex_moves["^A"] = {"<A", ">A"};
+  complex_moves[">A"] = {"^A", "vA"};
+  complex_moves["vA"] = {"<vA", "^>A"};
+  complex_moves["<A"] = {"v<<A", ">>^A"};
+  complex_moves["<<A"] = {"v<<A", "A", ">>^A"};
+  complex_moves["v<A"] = {"<A", ">A", "v<<A", ">>^A"};
 }
 
 void run(const std::string &base_path, const bool test)
