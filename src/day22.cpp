@@ -70,7 +70,7 @@ void part2(const std::string &input, const bool test)
       delta3 = delta4;
       delta4 = num % 10 - back % 10;
       std::tuple delta = {delta1, delta2, delta3, delta4};
-      if(!seen.contains(delta)){
+      if (!seen.contains(delta)) {
         seen.insert(delta);
         patterns[delta] += num % 10;
         res = res < patterns[delta] ? patterns[delta] : res;
